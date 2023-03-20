@@ -1,7 +1,6 @@
 using ErrorOr;
 using FoxBreakfast.Contracts.Breakfast;
 using FoxBreakfast.Models;
-using FoxBreakfast.ServiceError;
 using FoxBreakfast.Services.Breakfast;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,7 +8,7 @@ namespace FoxBreakfast.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class BreakfastController : ControllerBase
+public class BreakfastController : ApiController
 {
    private readonly IBreakfastService _breakfastService;
    public BreakfastController(IBreakfastService breakfastService)
@@ -21,15 +20,15 @@ public class BreakfastController : ControllerBase
    public IActionResult GetBreakfast(Guid id)
    {
       ErrorOr<Breakfast> getBreakfastResult = _breakfastService.GetBreakfast(id);
+      
+      return getBreakfastResult.Match(
+         breakfast => Ok(MapBreakfastResponse(breakfast)),
+         errors => Problem(errors)
+      );
+   }
 
-      if (getBreakfastResult.IsError
-         && getBreakfastResult.FirstError == ErrorInstance.Breakfast.NotFound)
-      {
-         return NotFound();
-      }
-
-      var breakfast = getBreakfastResult.Value;
-
+   private static BreakfastResponse MapBreakfastResponse(Breakfast breakfast)
+   {
       var response = new BreakfastResponse(
          breakfast.Id,
          breakfast.Name,
@@ -40,7 +39,7 @@ public class BreakfastController : ControllerBase
          breakfast.Savory,
          breakfast.Sweet
       );
-      return Ok(response);
+      return response;
    }
 
    [HttpPost]
@@ -57,22 +56,18 @@ public class BreakfastController : ControllerBase
          request.Sweet
       );
 
-      _breakfastService.CreateBreakfast(breakfast);
+      ErrorOr<Created> createBreakfastResult = _breakfastService.CreateBreakfast(breakfast);
 
-      var response = new BreakfastResponse(
-         breakfast.Id,
-         breakfast.Name,
-         breakfast.Description,
-         breakfast.StartDateTime,
-         breakfast.EndDateTime,
-         breakfast.LastModifiedDateTime,
-         breakfast.Savory,
-         breakfast.Sweet
-      );
+
+      if (createBreakfastResult.IsError)
+      {
+         return Problem(createBreakfastResult.Errors);
+      }
+      
       return CreatedAtAction(
          nameof(GetBreakfast),
          new { id = breakfast.Id},
-         request);
+         MapBreakfastResponse(breakfast));
    }
 
    [HttpPut("{id:guid}")]
@@ -98,7 +93,10 @@ public class BreakfastController : ControllerBase
    [HttpDelete("{id:guid}")]
    public IActionResult DeleteBreakfast(Guid id)
    {
-      _breakfastService.DeleteBreakfast(id);
-      return NoContent();
+      ErrorOr<Deleted> deletedResult = _breakfastService.DeleteBreakfast(id);
+
+      return deletedResult.Match(
+         deleted => NoContent(),
+         errors => Problem(errors));
    }
 }

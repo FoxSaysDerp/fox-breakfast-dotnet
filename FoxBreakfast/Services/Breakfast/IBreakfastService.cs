@@ -4,8 +4,8 @@ namespace FoxBreakfast.Services.Breakfast;
 
 public interface IBreakfastService
 {
-   void CreateBreakfast(Models.Breakfast breakfast);
-   void DeleteBreakfast(Guid id);
+   ErrorOr<Created> CreateBreakfast(Models.Breakfast breakfast);
    ErrorOr<Models.Breakfast> GetBreakfast(Guid id);
-   void UpsertBreakfast(Models.Breakfast breakfast);
+   ErrorOr<Deleted> DeleteBreakfast(Guid id);
+   ErrorOr<Updated> UpsertBreakfast(Models.Breakfast breakfast);
 }

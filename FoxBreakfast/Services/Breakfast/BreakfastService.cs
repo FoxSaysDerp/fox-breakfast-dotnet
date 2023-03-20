@@ -6,14 +6,18 @@ namespace FoxBreakfast.Services.Breakfast;
 public class BreakfastService : IBreakfastService
 {
    private readonly Dictionary<Guid, Models.Breakfast> _breakfasts = new();
-   public void CreateBreakfast(Models.Breakfast breakfast)
+   public ErrorOr<Created> CreateBreakfast(Models.Breakfast breakfast)
    {
       _breakfasts.Add(breakfast.Id, breakfast);
+
+      return Result.Created;
    }
 
-   public void DeleteBreakfast(Guid id)
+   public ErrorOr<Deleted> DeleteBreakfast(Guid id)
    {
       _breakfasts.Remove(id);
+
+      return Result.Deleted;
    }
 
    public ErrorOr<Models.Breakfast> GetBreakfast(Guid id)
@@ -25,8 +29,10 @@ public class BreakfastService : IBreakfastService
       return ErrorInstance.Breakfast.NotFound;
    }
 
-   public void UpsertBreakfast(Models.Breakfast breakfast)
+   public ErrorOr<Updated> UpsertBreakfast(Models.Breakfast breakfast)
    {
       _breakfasts[breakfast.Id] = breakfast;
+
+      return Result.Updated;
    }
 }
