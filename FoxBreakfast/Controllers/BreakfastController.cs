@@ -1,5 +1,7 @@
+using ErrorOr;
 using FoxBreakfast.Contracts.Breakfast;
 using FoxBreakfast.Models;
+using FoxBreakfast.ServiceError;
 using FoxBreakfast.Services.Breakfast;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,7 +20,16 @@ public class BreakfastController : ControllerBase
    [HttpGet("{id:guid}")]
    public IActionResult GetBreakfast(Guid id)
    {
-      Breakfast breakfast = _breakfastService.GetBreakfast(id);
+      ErrorOr<Breakfast> getBreakfastResult = _breakfastService.GetBreakfast(id);
+
+      if (getBreakfastResult.IsError
+         && getBreakfastResult.FirstError == ErrorInstance.Breakfast.NotFound)
+      {
+         return NotFound();
+      }
+
+      var breakfast = getBreakfastResult.Value;
+
       var response = new BreakfastResponse(
          breakfast.Id,
          breakfast.Name,

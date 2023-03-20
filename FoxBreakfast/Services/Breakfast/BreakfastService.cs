@@ -1,3 +1,6 @@
+using ErrorOr;
+using FoxBreakfast.ServiceError;
+
 namespace FoxBreakfast.Services.Breakfast;
 
 public class BreakfastService : IBreakfastService
@@ -13,9 +16,13 @@ public class BreakfastService : IBreakfastService
       _breakfasts.Remove(id);
    }
 
-   public Models.Breakfast GetBreakfast(Guid id)
+   public ErrorOr<Models.Breakfast> GetBreakfast(Guid id)
    {
-      return _breakfasts[id];
+      if (_breakfasts.TryGetValue(id, out var breakfast))
+      {
+         return breakfast;
+      }
+      return ErrorInstance.Breakfast.NotFound;
    }
 
    public void UpsertBreakfast(Models.Breakfast breakfast)
