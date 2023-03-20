@@ -8,8 +8,18 @@ public class BreakfastService : IBreakfastService
       _breakfasts.Add(breakfast.Id, breakfast);
    }
 
+   public void DeleteBreakfast(Guid id)
+   {
+      _breakfasts.Remove(id);
+   }
+
    public Models.Breakfast GetBreakfast(Guid id)
    {
       return _breakfasts[id];
+   }
+
+   public void UpsertBreakfast(Models.Breakfast breakfast)
+   {
+      _breakfasts[breakfast.Id] = breakfast;
    }
 }
