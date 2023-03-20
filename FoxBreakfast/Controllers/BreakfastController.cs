@@ -20,7 +20,6 @@ public class BreakfastController : ApiController
    public IActionResult GetBreakfast(Guid id)
    {
       ErrorOr<Breakfast> getBreakfastResult = _breakfastService.GetBreakfast(id);
-      
       return getBreakfastResult.Match(
          breakfast => Ok(MapBreakfastResponse(breakfast)),
          errors => Problem(errors)
@@ -29,7 +28,7 @@ public class BreakfastController : ApiController
 
    private static BreakfastResponse MapBreakfastResponse(Breakfast breakfast)
    {
-      var response = new BreakfastResponse(
+      return new BreakfastResponse(
          breakfast.Id,
          breakfast.Name,
          breakfast.Description,
@@ -39,7 +38,6 @@ public class BreakfastController : ApiController
          breakfast.Savory,
          breakfast.Sweet
       );
-      return response;
    }
 
    [HttpPost]
@@ -58,16 +56,10 @@ public class BreakfastController : ApiController
 
       ErrorOr<Created> createBreakfastResult = _breakfastService.CreateBreakfast(breakfast);
 
-
-      if (createBreakfastResult.IsError)
-      {
-         return Problem(createBreakfastResult.Errors);
-      }
-      
-      return CreatedAtAction(
-         nameof(GetBreakfast),
-         new { id = breakfast.Id},
-         MapBreakfastResponse(breakfast));
+      return createBreakfastResult.Match(
+         created => CreatedAtGetBreakfast(breakfast),
+         errors => Problem(errors)
+      );
    }
 
    [HttpPut("{id:guid}")]
@@ -84,19 +76,29 @@ public class BreakfastController : ApiController
          request.Sweet
       );
 
-      _breakfastService.UpsertBreakfast(breakfast);
+      ErrorOr<UpsertedBreakfast> upsertBreakfastResult = _breakfastService.UpsertBreakfast(breakfast);
 
-      // TODO: return 201 if a new breakfast was created
-      return NoContent();
+      return upsertBreakfastResult.Match(
+         upserted => upserted.IsNewlyCreated ? CreatedAtGetBreakfast(breakfast) : NoContent(),
+         errors => Problem(errors)
+      );
    }
 
    [HttpDelete("{id:guid}")]
    public IActionResult DeleteBreakfast(Guid id)
    {
-      ErrorOr<Deleted> deletedResult = _breakfastService.DeleteBreakfast(id);
+      ErrorOr<Deleted> deleteBreakfastResult = _breakfastService.DeleteBreakfast(id);
 
-      return deletedResult.Match(
+      return deleteBreakfastResult.Match(
          deleted => NoContent(),
          errors => Problem(errors));
+   }
+
+   private CreatedAtActionResult CreatedAtGetBreakfast(Breakfast breakfast)
+   {
+      return CreatedAtAction(
+               nameof(GetBreakfast),
+               new { id = breakfast.Id },
+               MapBreakfastResponse(breakfast));
    }
 }
