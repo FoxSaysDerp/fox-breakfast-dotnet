@@ -1,30 +1,76 @@
 using FoxBreakfast.Contracts.Breakfast;
+using FoxBreakfast.Models;
+using FoxBreakfast.Services.Breakfast;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FoxBreakfast.Controllers;
 
 [ApiController]
+[Route("[controller]")]
 public class BreakfastController : ControllerBase
 {
-   [HttpGet("/breakfast/{id:guid}")]
+   private readonly IBreakfastService _breakfastService;
+   public BreakfastController(IBreakfastService breakfastService)
+   {
+      _breakfastService = breakfastService;
+   }
+
+   [HttpGet("{id:guid}")]
    public IActionResult GetBreakfast(Guid id)
    {
-      return Ok(id);
+      Breakfast breakfast = _breakfastService.GetBreakfast(id);
+      var response = new BreakfastResponse(
+         breakfast.Id,
+         breakfast.Name,
+         breakfast.Description,
+         breakfast.StartDateTime,
+         breakfast.EndDateTime,
+         breakfast.LastModifiedDateTime,
+         breakfast.Savory,
+         breakfast.Sweet
+      );
+      return Ok(response);
    }
 
-   [HttpPost("/breakfast")]
+   [HttpPost]
    public IActionResult CreateBreakfast(CreateBreakfastRequest request)
    {
-      return Ok();
+      var breakfast = new Breakfast(
+         Guid.NewGuid(),
+         request.Name,
+         request.Description,
+         request.StartDateTime,
+         request.EndDateTime,
+         DateTime.Now,
+         request.Savory,
+         request.Sweet
+      );
+
+      _breakfastService.CreateBreakfast(breakfast);
+
+      var response = new BreakfastResponse(
+         breakfast.Id,
+         breakfast.Name,
+         breakfast.Description,
+         breakfast.StartDateTime,
+         breakfast.EndDateTime,
+         breakfast.LastModifiedDateTime,
+         breakfast.Savory,
+         breakfast.Sweet
+      );
+      return CreatedAtAction(
+         nameof(GetBreakfast),
+         new { id = breakfast.Id},
+         request);
    }
 
-   [HttpPut("/breakfast/{id:guid}")]
+   [HttpPut("{id:guid}")]
    public IActionResult UpsertBreakfast(Guid id, UpsertBreakfastRequest request)
    {
       return Ok();
    }
 
-   [HttpDelete("/breakfast/{id:guid}")]
+   [HttpDelete("{id:guid}")]
    public IActionResult DeleteBreakfast(Guid id)
    {
       return Ok();
