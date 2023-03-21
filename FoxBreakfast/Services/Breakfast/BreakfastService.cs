@@ -31,9 +31,9 @@ public class BreakfastService : IBreakfastService
 
    public ErrorOr<UpsertedBreakfast> UpsertBreakfast(Models.Breakfast breakfast)
    {
-      var IsNewlyCreated = !_breakfasts.ContainsKey(breakfast.Id);
+      var isNewlyCreated = !_breakfasts.ContainsKey(breakfast.Id);
       _breakfasts[breakfast.Id] = breakfast;
 
-      return new UpsertedBreakfast(IsNewlyCreated);
+      return new UpsertedBreakfast(isNewlyCreated);
    }
 }
